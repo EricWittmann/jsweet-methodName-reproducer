@@ -1,0 +1,178 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>io.apicurio</groupId>
+    <artifactId>jsweet-methodName-reproducer</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>scm:git:git@github.com:EricWittmann/jsweet-methodName-reproducer.git</connection>
+        <developerConnection>scm:git:git@github.com:EricWittmann/jsweet-methodName-reproducer.git</developerConnection>
+        <url>scm:git:git@github.com:EricWittmann/jsweet-methodName-reproducer.git</url>
+    </scm>
+
+    <developers>
+        <developer>
+            <name>Eric Wittmann</name>
+            <id>EricWittmann</id>
+            <email>eric.wittmann@redhat.com</email>
+            <organization>Red Hat</organization>
+            <timezone>-5</timezone>
+        </developer>
+    </developers>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format>
+        <timestamp>${maven.build.timestamp}</timestamp>
+
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+
+        <!-- Node Versions -->
+        <version.node-js>16.16.0</version.node-js>
+
+        <!-- Dependency Versions -->
+        <version.junit>4.13.2</version.junit>
+        <version.org.jsweet-core>6.3.0</version.org.jsweet-core>
+        <version.org.jsweet-transpiler>3.1.0</version.org.jsweet-transpiler>
+        
+        <!-- Plugin Versions -->
+        <version.org.eclipse.m2e.lifecycle-mapping>1.0.0</version.org.eclipse.m2e.lifecycle-mapping>
+        <version.org.apache.felix.maven-bundle-plugin>5.1.8</version.org.apache.felix.maven-bundle-plugin>
+        <version.maven-compiler-plugin>3.10.1</version.maven-compiler-plugin>
+        <version.maven-source-plugin>3.2.1</version.maven-source-plugin>
+        <version.maven-javadoc-plugin>3.4.1</version.maven-javadoc-plugin>
+        <version.maven-resources-plugin>3.3.0</version.maven-resources-plugin>
+        <version.maven-gpg-plugin>3.0.1</version.maven-gpg-plugin>
+        <version.org.codehaus.mojo.exec-maven-plugin>3.1.0</version.org.codehaus.mojo.exec-maven-plugin>
+        <version.com.github.eirslett.frontend-maven-plugin>1.12.1</version.com.github.eirslett.frontend-maven-plugin>
+        <version.jsweet-maven-plugin>3.1.0</version.jsweet-maven-plugin>
+    </properties>
+
+    <dependencies>
+        <!-- Third Party Deps -->
+        <dependency>
+            <groupId>org.jsweet</groupId>
+            <artifactId>jsweet-core</artifactId>
+            <version>${version.org.jsweet-core}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jsweet</groupId>
+            <artifactId>jsweet-transpiler</artifactId>
+            <version>${version.org.jsweet-transpiler}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Test Only Deps -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${version.junit}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${version.maven-compiler-plugin}</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                    <fork>true</fork>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>${version.maven-source-plugin}</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>${version.maven-javadoc-plugin}</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <source>8</source>
+                            <doclint>none</doclint>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>transpilation</id>
+
+            <build>
+                <plugins>
+                    <!-- Generate TS from Java using JSweet -->
+                    <plugin>
+                        <groupId>org.jsweet</groupId>
+                        <artifactId>jsweet-maven-plugin</artifactId>
+                        <version>${version.jsweet-maven-plugin}</version>
+                        <configuration>
+                            <verbose>true</verbose>
+                            <tsOut>target/ts/src</tsOut>
+                            <targetVersion>ES6</targetVersion>
+                            <module>umd</module>
+                            <moduleResolution>classic</moduleResolution>
+                            <tsOnly>true</tsOnly>
+                            <javaCompilerExtraOptions>
+                                --add-opens java.base/java.net=ALL-UNNAMED
+                                --add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED
+                                --add-opens jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED
+                                --add-opens jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED
+                                --add-opens jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED
+                                --add-opens jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED
+                                --add-opens jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED
+                                --add-opens jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED
+                            </javaCompilerExtraOptions>
+                            <excludes>
+                                <exclude>**/_*/**</exclude>
+                            </excludes>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>generate-js</id>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>jsweet</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>
